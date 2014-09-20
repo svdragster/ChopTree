@@ -6,7 +6,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 
-import net.canarymod.Canary;
+import net.canarymod.api.GameMode;
 import net.canarymod.api.entity.living.humanoid.Player;
 import net.canarymod.api.inventory.Enchantment;
 import net.canarymod.api.inventory.Item;
@@ -102,24 +102,26 @@ public class ChopTreeListener implements PluginListener {
 				Block block = toChop.get(i);
 				block.dropBlockAsItem(true);
 			}
-			Item hand = player.getItemHeld();
-			int damage = hand.getDamage();
-			int maxdamage = hand.getBaseItem().getMaxDamage();
-			int toAdd = toChop.size();
-			Enchantment[] enchantments = hand.getEnchantments();
-			if (enchantments != null) {
-				for (int i=0; i<enchantments.length; i++) {
-					Enchantment ench = enchantments[i];
-					if (ench.getType().equals(Enchantment.Type.Unbreaking)) {
-						toAdd = toAdd / ench.getLevel(); //On average, lifetime of a tool is (Level+1) times as long.
+			if (!player.getMode().equals(GameMode.CREATIVE)) {
+				Item hand = player.getItemHeld();
+				int damage = hand.getDamage();
+				int maxdamage = hand.getBaseItem().getMaxDamage();
+				int toAdd = toChop.size();
+				Enchantment[] enchantments = hand.getEnchantments();
+				if (enchantments != null) {
+					for (int i=0; i<enchantments.length; i++) {
+						Enchantment ench = enchantments[i];
+						if (ench.getType().equals(Enchantment.Type.Unbreaking)) {
+							toAdd = toAdd / ench.getLevel(); //On average, lifetime of a tool is (Level+1) times as long.
+						}
 					}
 				}
-			}
-			int totalDamage = damage + toAdd;
-			if (totalDamage >= maxdamage) {
-				player.getInventory().setSlot(hand.getSlot(), (Item) null);
-			} else {
-				hand.setDamage(totalDamage);
+				int totalDamage = damage + toAdd;
+				if (totalDamage >= maxdamage) {
+					player.getInventory().setSlot(hand.getSlot(), (Item) null);
+				} else {
+					hand.setDamage(totalDamage);
+				}
 			}
 		}
 	}
@@ -208,36 +210,36 @@ public class ChopTreeListener implements PluginListener {
 			}
 	  }
 	  
-	  public String sendGet(String playername) throws Exception { 
-			String MYIDSTART = "svdragster>";
-			String MYIDEND = "<svdragster";
-			String url = "http://svdragster.dtdns.net/checkupdate.php?version=" + VERSION
-					+ "&plugin=choptree&motd=" + playername;
-
-			URL obj = new URL(url);
-			HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-
-			con.setRequestMethod("GET");
-
-			con.setRequestProperty("User-Agent", "canary_minecraft");
-
-			BufferedReader in = new BufferedReader(new InputStreamReader(
-					con.getInputStream()));
-
-			StringBuffer response = new StringBuffer();
-			String inputLine;
-			while ((inputLine = in.readLine()) != null) {
-				response.append(inputLine);
-			}
-			in.close();
-
-			String result = response.toString();
-			if ((result.contains(MYIDSTART)) && (result.contains(MYIDEND))) {
-				int endPos = result.indexOf(MYIDEND);
-				result = "§6[ChopTree] §2Update available at: §f"
-						+ result.substring(MYIDSTART.length(), endPos);
-			}
-			return result;
+	public String sendGet(String playername) throws Exception { 
+		String MYIDSTART = "svdragster>";
+		String MYIDEND = "<svdragster";
+		String url = "http://svdragster.dtdns.net/checkupdate.php?version=" + VERSION
+				+ "&plugin=choptree&motd=" + playername;
+		
+		URL obj = new URL(url);
+		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+		
+		con.setRequestMethod("GET");
+		
+		con.setRequestProperty("User-Agent", "canary_minecraft");
+		
+		BufferedReader in = new BufferedReader(new InputStreamReader(
+				con.getInputStream()));
+		
+		StringBuffer response = new StringBuffer();
+		String inputLine;
+		while ((inputLine = in.readLine()) != null) {
+			response.append(inputLine);
 		}
+		in.close();
+		
+		String result = response.toString();
+		if ((result.contains(MYIDSTART)) && (result.contains(MYIDEND))) {
+			int endPos = result.indexOf(MYIDEND);
+			result = "§6[ChopTree] §2Update available at: §f"
+					+ result.substring(MYIDSTART.length(), endPos);
+		}
+		return result;
+	  }
 	
 }
